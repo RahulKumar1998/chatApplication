@@ -12,7 +12,7 @@ public class Server {
     PrintWriter printWriter;
     public Server() {
         try{
-            serverSocket = new ServerSocket(7777);
+            serverSocket = new ServerSocket(7778);
             System.out.println("Server ready to accept connection");
             System.out.println("Server waiting...");
             socket = serverSocket.accept();
@@ -30,40 +30,54 @@ public class Server {
         Runnable r1 = ()->{
 
                 System.out.println("Writer started...");
-                while(true){
-                    try{
+                try {
+                    while (!socket.isClosed()) {
+
                         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-                        printWriter.println(br.readLine());
-                    }
-                    catch (Exception e){
-                        e.printStackTrace();
-                    }
+                        String msg = br.readLine();
+                        printWriter.println(msg);
+                        printWriter.flush();
+                        if(msg.equals("exit")){
+                            socket.close();
+                            break;
+                        }
 
+                    }
                 }
-
+                catch (Exception e){
+                    System.out.println("Connection is Closed now");;
+                }
         };
-        new Thread(r1).start();
+        Thread t1 = new Thread(r1);
+        t1.start();
+
     }
 
     private void startReading() {
+
         Runnable r2 = ()->{
                 System.out.println("Reader started...");
-                while(true){
-                    try {
+                try {
+                    while (!socket.isClosed()) {
+
                         String msg = bufferedReader.readLine();
                         if (msg.equals("exit")) {
                             System.out.println("client ended the chat!!");
+                            socket.close();
                             break;
                         }
                         System.out.println("Client:" + msg);
                     }
-                    catch (Exception e){
-                            e.printStackTrace();
-                        }
+                }
+                catch (Exception e){
+                    System.out.println("Connection is Closed now");
                 }
 
         };
-        new Thread(r2).start();
+        Thread t2 = new Thread(r2);
+        t2.start();
+
+
     }
 
     public static void main(String[] args) {
