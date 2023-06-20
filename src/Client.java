@@ -1,12 +1,24 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
-public class Client {
+public class Client extends JFrame{
     Socket socket;
     BufferedReader bufferedReader;
     PrintWriter printWriter;
+
+    //Declare components for textGUI
+    private JLabel header = new JLabel("Client Space");
+    private JTextArea messageArea = new JTextArea();
+    private JTextArea messageInput = new JTextArea();
+    private Font font = new Font("Times New Roman",Font.PLAIN,20)
+
+            ;
     public Client() {
         try{
             System.out.println("Sending request to Server...");
@@ -14,12 +26,71 @@ public class Client {
             System.out.println("Connection created");
             bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             printWriter = new PrintWriter(socket.getOutputStream());
+            createGUI();
+            handleEvents();
             startReading();
-            startWriting();
+            //startWriting();
         }
         catch (Exception e){
             e.printStackTrace();
         }
+    }
+
+    private void handleEvents() {
+
+        messageInput.addKeyListener(new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+//                System.out.println(e.getKeyCode());
+
+                if(e.getKeyCode() == 10){
+                    String msg = messageInput.getText();
+                    printWriter.println(msg);
+                    printWriter.flush();
+                    messageArea.append("Me:"+msg+"\n");
+                    messageInput.setText("");
+                    messageInput.requestFocus();
+                }
+            }
+        });
+    }
+
+    private void createGUI() {
+        //Creation of GUI
+        this.setTitle("Client Messenger[END]");
+        this.setSize(600,600);
+        this.setLocationRelativeTo(null);
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.setVisible(true);
+
+        //components font
+        header.setFont(font);
+        messageArea.setFont(font);
+        messageInput.setFont(font);
+
+        //set frame layout
+        this.setLayout(new BorderLayout());
+        header.setHorizontalAlignment(SwingConstants.CENTER);
+        header.setBorder(BorderFactory.createRaisedSoftBevelBorder());
+        messageInput.setBorder(BorderFactory.createEtchedBorder());
+        messageArea.setEditable(false);
+
+
+        //adding components to frame
+        this.add(header,BorderLayout.NORTH);
+        JScrollPane jScrollPane = new JScrollPane(messageArea);
+        this.add(jScrollPane,BorderLayout.CENTER);
+        this.add(messageInput,BorderLayout.SOUTH);
     }
 
     private void startWriting() {
@@ -60,10 +131,13 @@ public class Client {
                     String msg = bufferedReader.readLine();
                     if (msg.equals("exit")) {
                         System.out.println("server ended the chat!!");
+                        JOptionPane.showMessageDialog(this,"server ended the chat!!");
                         socket.close();
+                        messageInput.setEnabled(false);
                         break;
                     }
-                    System.out.println("Server:" + msg);
+                    messageArea.append("Server:" + msg + "\n");
+                    //System.out.println("Server:" + msg);
 
                 }
             }
